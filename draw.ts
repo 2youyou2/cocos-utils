@@ -1,4 +1,4 @@
-import { assetManager, CCObject, Color, Component, Director, director, EffectAsset, find, GFXComparisonFunc, GFXCullMode, GFXPrimitiveMode, Mat4, Material, Mesh, MeshRenderer, Node, primitives, utils, Vec3, _decorator, __private } from 'cc';
+import { assetManager, CCObject, Color, Component, Director, director, EffectAsset, find, gfx, Mat4, Material, Mesh, MeshRenderer, Node, primitives, utils, Vec3, _decorator, __private } from 'cc';
 
 const { ccclass } = _decorator;
 
@@ -14,9 +14,9 @@ export enum DrawType {
 }
 
 export enum CullMode {
-    Back = GFXCullMode.BACK,
-    Front = GFXCullMode.FRONT,
-    None = GFXCullMode.NONE,
+    Back = gfx.CullMode.BACK,
+    Front = gfx.CullMode.FRONT,
+    None = gfx.CullMode.NONE,
 }
 
 interface MeshData {
@@ -25,11 +25,11 @@ interface MeshData {
     ibuffer: Uint16Array,
     vertexCount: number,
     indexCount: number,
-    primitiveMode: GFXPrimitiveMode,
+    primitiveMode: gfx.PrimitiveMode,
 
-    cullMode: GFXCullMode,
+    cullMode: gfx.CullMode,
 
-    depthFunc?: GFXComparisonFunc,
+    depthFunc?: gfx.ComparisonFunc,
     depthTest?: boolean,
     depthWrite?: boolean,
 
@@ -62,14 +62,14 @@ export class MeshDrawer extends Component {
 
     depthTest: undefined | boolean;
     depthWrite: undefined | boolean;
-    depthFunc: undefined | GFXComparisonFunc;
+    depthFunc: undefined | gfx.ComparisonFunc;
 
     // effect = 'builtin-unlit';
     technique = TechniqueNams.transparent;
 
     matrix = new Mat4;
 
-    depth (depthTest?: boolean, depthWrite?: boolean, depthFunc?: GFXComparisonFunc) {
+    depth (depthTest?: boolean, depthWrite?: boolean, depthFunc?: gfx.ComparisonFunc) {
         this.depthTest = depthTest;
         this.depthWrite = depthWrite;
         this.depthFunc = depthFunc;
@@ -88,21 +88,21 @@ export class MeshDrawer extends Component {
                 let p: primitives.IGeometry = (primitives as any)[name](...args);
 
                 if (this.type & DrawType.Solid) {
-                    p.primitiveMode = GFXPrimitiveMode.TRIANGLE_LIST;
+                    p.primitiveMode = gfx.PrimitiveMode.TRIANGLE_LIST;
                     this.primitive(p, this.color);
                 }
                 if (this.type & DrawType.FrameWire || this.type & DrawType.FrameWireDouble) {
-                    p.primitiveMode = GFXPrimitiveMode.LINE_LIST;
+                    p.primitiveMode = gfx.PrimitiveMode.LINE_LIST;
                     this.primitive(p, this.frameWireColor);
                 }
                 if (this.type & DrawType.FrameWireDouble) {
-                    p.primitiveMode = GFXPrimitiveMode.LINE_LIST;
+                    p.primitiveMode = gfx.PrimitiveMode.LINE_LIST;
 
                     let depthFunc = this.depthFunc;
                     let alpha = this.frameWireColor.a;
                     let technique = this.technique;
 
-                    this.depthFunc = GFXComparisonFunc.GREATER;
+                    this.depthFunc = gfx.ComparisonFunc.GREATER;
                     this.frameWireColor.a = 30;
                     this.technique = TechniqueNams.transparent;
 
@@ -191,13 +191,13 @@ export class MeshDrawer extends Component {
         meshData.vertexCount += vertexCount;
 
         let indexCount = 0;
-        if (primitiveMode === GFXPrimitiveMode.POINT_LIST) {
+        if (primitiveMode === gfx.PrimitiveMode.POINT_LIST) {
             indexCount = vertexCount;
         }
-        else if (primitiveMode === GFXPrimitiveMode.LINE_LIST) {
+        else if (primitiveMode === gfx.PrimitiveMode.LINE_LIST) {
             indexCount = indices.length * 2;
         }
-        else if (primitiveMode === GFXPrimitiveMode.TRIANGLE_LIST) {
+        else if (primitiveMode === gfx.PrimitiveMode.TRIANGLE_LIST) {
             indexCount = indices.length;
         }
 
@@ -230,17 +230,17 @@ export class MeshDrawer extends Component {
             vbuffer[vbOffset++] = color.z;
             vbuffer[vbOffset++] = color.w;
 
-            if (primitiveMode === GFXPrimitiveMode.POINT_LIST) {
+            if (primitiveMode === gfx.PrimitiveMode.POINT_LIST) {
                 ibuffer[ibOffset++] = vertexStart + i;
             }
         }
 
-        if (primitiveMode === GFXPrimitiveMode.TRIANGLE_LIST) {
+        if (primitiveMode === gfx.PrimitiveMode.TRIANGLE_LIST) {
             for (let i = 0; i < indices.length; i++) {
                 ibuffer[ibOffset++] = vertexStart + indices[i];
             }
         }
-        else if (primitiveMode === GFXPrimitiveMode.LINE_LIST) {
+        else if (primitiveMode === gfx.PrimitiveMode.LINE_LIST) {
             for (let i = 0; i < indices.length - 1; i++) {
                 ibuffer[ibOffset++] = vertexStart + indices[i];
                 ibuffer[ibOffset++] = vertexStart + indices[i + 1];

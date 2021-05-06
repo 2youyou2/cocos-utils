@@ -1,12 +1,12 @@
 {
-  "ver": "1.0.0",
-  "importer": "*",
+  "ver": "1.1.0",
+  "importer": "directory",
   "imported": true,
   "uuid": "02447fde-97a9-4fec-ba00-542a55adebc8",
-  "files": [
-    "",
-    ".json"
-  ],
+  "files": [],
   "subMetas": {},
-  "userData": {}
+  "userData": {
+    "compressionType": {},
+    "isRemoteBundle": {}
+  }
 }
