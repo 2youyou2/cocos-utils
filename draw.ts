@@ -152,6 +152,8 @@ export class MeshDrawer extends Component {
         let meshData = this._meshDatas.get(id);
         if (!meshData) {
             tempPrimitive.primitiveMode = primitiveMode;
+            tempPrimitive.minPos = Vec3.ZERO;
+            tempPrimitive.maxPos = Vec3.ZERO;
             meshData = {
                 mesh: utils.createMesh(tempPrimitive),
                 vertexCount: 0,
