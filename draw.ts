@@ -1,4 +1,4 @@
-import { assetManager, CCObject, Color, Component, Director, director, EffectAsset, find, gfx, Mat4, Material, Mesh, MeshRenderer, Node, primitives, utils, Vec3, _decorator, __private } from 'cc';
+import { assetManager, CCObject, Color, Component, Director, director, EffectAsset, error, find, gfx, Mat4, Material, Mesh, MeshRenderer, Node, primitives, utils, Vec3, _decorator, __private } from 'cc';
 
 const { ccclass } = _decorator;
 
@@ -294,6 +294,11 @@ export class MeshDrawer extends Component {
                 // let effect = EffectAsset.get('builtin-unlit') || EffectAsset.get('unlit')
 
                 assetManager.loadAny('a3cd009f-0ab0-420d-9278-b9fdab939bbc', (err, effect: EffectAsset) => {
+                    if (err) {
+                        error('Failed to load builtin unlit effect.')
+                        return;
+                    }
+
                     let techniqueIndex = effect.techniques.findIndex(t => {
                         return t.name === meshData.technique;
                     })
