@@ -89,13 +89,13 @@ export default class OrbitCamera extends Component {
 
     start () {
         if (this.enableTouch) {
-            systemEvent.on(SystemEventType.TOUCH_START, this.onTouchStart, this)
-            systemEvent.on(SystemEventType.TOUCH_MOVE, this.onTouchMove, this)
-            systemEvent.on(SystemEventType.TOUCH_END, this.onTouchEnd, this)
+            systemEvent.on(SystemEvent.EventType.TOUCH_START, this.onTouchStart, this)
+            systemEvent.on(SystemEvent.EventType.TOUCH_MOVE, this.onTouchMove, this)
+            systemEvent.on(SystemEvent.EventType.TOUCH_END, this.onTouchEnd, this)
         }
 
         if (this.enableScaleRadius) {
-            systemEvent.on(SystemEventType.MOUSE_WHEEL, this.onMouseWhee, this)
+            systemEvent.on(SystemEvent.EventType.MOUSE_WHEEL, this.onMouseWhee, this)
         }
 
         let targetRotation = this._targetRotation.set(this._startRotation);
