@@ -44,23 +44,29 @@ export class FlyCameraControl extends Component {
     }
 
     _tween: Tween<Node> | null = null;
+    _controlling = false;
     beginControl () {
-        if (this.isMoving && this.isRotating && this.isKeyDown) {
+        if (this._controlling) {
             return;
         }
+
+        this._controlling = true;
+
+        console.log('beginControl')
 
         if (this._tween) {
             this._tween.stop();
         }
 
+        this._storedRotation.set(this.node.worldRotation);
+        this._storedPosition.set(this.node.worldPosition);
+
         this._targetRotation.set(this.node.eulerAngles);
-        this._rotation.set(this.node.worldRotation);
+        this._targetRotation.z = 0;
+        Quat.fromEuler(this._rotation, this._targetRotation.x, this._targetRotation.y, this._targetRotation.z);
 
         this._targetPosition.set(this.node.worldPosition);
         this._position.set(this._targetPosition);
-
-        this._storedRotation.set(this._rotation);
-        this._storedPosition.set(this._targetPosition);
 
         let animation = this.getComponent(Animation);
         if (animation) {
@@ -76,6 +82,9 @@ export class FlyCameraControl extends Component {
             if (this.isMoving || this.isRotating || this.isKeyDown) {
                 return;
             }
+
+            this._controlling = false;
+            console.log('endControl')
 
             this._tween = tween(this.node)
                 .to(0.5, { worldRotation: this._storedRotation, position: this._storedPosition })
