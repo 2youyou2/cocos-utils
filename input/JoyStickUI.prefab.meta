@@ -1,0 +1,13 @@
+{
+  "ver": "1.1.28",
+  "importer": "prefab",
+  "imported": true,
+  "uuid": "b0452538-e240-49ed-a114-9d21f13f16c5",
+  "files": [
+    ".json"
+  ],
+  "subMetas": {},
+  "userData": {
+    "syncNodeName": "JoyStickUI"
+  }
+}
