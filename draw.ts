@@ -152,8 +152,8 @@ export class MeshDrawer extends Component {
         let meshData = this._meshDatas.get(id);
         if (!meshData) {
             tempPrimitive.primitiveMode = primitiveMode;
-            tempPrimitive.minPos = Vec3.ZERO;
-            tempPrimitive.maxPos = Vec3.ZERO;
+            tempPrimitive.minPos = new Vec3(-1000, -1000, -1000);
+            tempPrimitive.maxPos = new Vec3(1000, 1000, 1000);
             meshData = {
                 mesh: utils.createMesh(tempPrimitive),
                 vertexCount: 0,
@@ -382,8 +382,8 @@ class Debug {
         // drawer.color.set(Color.WHITE);
         // drawer.box({})
 
-        // drawer.technique = TechniqueNams.transparent;
-        // drawer.type = DrawType.Solid | DrawType.FrameWireDouble;
+        drawer.technique = TechniqueNams.transparent;
+        drawer.type = DrawType.Solid | DrawType.FrameWireDouble;
 
         // drawer.color.set(Color.WHITE);
         // drawer.box({
