@@ -18,6 +18,9 @@ export class FlyCameraControl extends Component {
     @property
     moveSpeed = 1;
 
+    @property
+    reversePositionOnEnd = false;
+
     _rotation = new Quat;
     _targetRotation = new Vec3
 
@@ -86,16 +89,25 @@ export class FlyCameraControl extends Component {
             this._controlling = false;
             console.log('endControl')
 
-            this._tween = tween(this.node)
-                .to(0.5, { worldRotation: this._storedRotation, position: this._storedPosition })
-                .call(() => {
-                    let animation = this.getComponent(Animation);
-                    if (animation) {
-                        animation.resume();
-                    }
-                    this._tween = null;
-                })
-                .start();
+            if (this.reversePositionOnEnd) {
+                this._tween = tween(this.node)
+                    .to(0.5, { worldRotation: this._storedRotation, position: this._storedPosition })
+                    .call(() => {
+                        let animation = this.getComponent(Animation);
+                        if (animation) {
+                            animation.resume();
+                        }
+                        this._tween = null;
+                    })
+                    .start();
+            }
+            else {
+                let animation = this.getComponent(Animation);
+                if (animation) {
+                    animation.resume();
+                }
+            }
+
         }, 1000);
     }
 
