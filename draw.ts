@@ -3,14 +3,15 @@ import { assetManager, CCObject, Color, Component, Director, director, EffectAss
 const { ccclass } = _decorator;
 
 let _tempVec3 = new Vec3;
+let _tempBoxVec3 = new Array(8).fill(0).map(_ => new Vec3)
 
 let DrawTypeIndex = 0;
 export enum DrawType {
     Solid = 1 << DrawTypeIndex++,
     FrameWire = 1 << DrawTypeIndex++,
     FrameWireDouble = 1 << DrawTypeIndex++,
-    BoundingLine = 1 << DrawTypeIndex++,
-    BoundingLineDouble = 1 << DrawTypeIndex++,
+    Line = 1 << DrawTypeIndex++,
+    LineDouble = 1 << DrawTypeIndex++,
 }
 
 export enum CullMode {
@@ -82,21 +83,37 @@ export class MeshDrawer extends Component {
     constructor () {
         super();
 
+        this._line = this._line.bind(this);
+        this._line_box = this._line_box.bind(this);
+
         for (let name in primitives) {
             if (!(this as any)[name]) continue;
-            (this as any)[name] = function (...args: any[]) {
-                let p: primitives.IGeometry = (primitives as any)[name](...args);
+            (this as any)[name] = (...args: any[]) => {
+                let solidFunc = (primitives as any)[name];
+
+                let lineFunc: any;
+                if (this.type & DrawType.Line || this.type & DrawType.LineDouble) {
+                    lineFunc = (this as any)['_line_' + name];
+                }
+
+
+                let solidPri: primitives.IGeometry = solidFunc(...args);
+                let linePri: primitives.IGeometry = solidPri;
+                if (lineFunc) {
+                    linePri = lineFunc(...args);
+                }
 
                 if (this.type & DrawType.Solid) {
-                    p.primitiveMode = gfx.PrimitiveMode.TRIANGLE_LIST;
-                    this.primitive(p, this.color);
+                    solidPri.primitiveMode = gfx.PrimitiveMode.TRIANGLE_LIST;
+                    this.primitive(solidPri, this.color);
                 }
-                if (this.type & DrawType.FrameWire || this.type & DrawType.FrameWireDouble) {
-                    p.primitiveMode = gfx.PrimitiveMode.LINE_LIST;
-                    this.primitive(p, this.frameWireColor);
+                if (this.type & DrawType.FrameWire || this.type & DrawType.FrameWireDouble ||
+                    this.type & DrawType.Line || this.type & DrawType.LineDouble) {
+                    linePri.primitiveMode = gfx.PrimitiveMode.LINE_LIST;
+                    this.primitive(linePri, this.frameWireColor);
                 }
-                if (this.type & DrawType.FrameWireDouble) {
-                    p.primitiveMode = gfx.PrimitiveMode.LINE_LIST;
+                if (this.type & DrawType.FrameWireDouble || this.type & DrawType.LineDouble) {
+                    linePri.primitiveMode = gfx.PrimitiveMode.LINE_LIST;
 
                     let depthFunc = this.depthFunc;
                     let alpha = this.frameWireColor.a;
@@ -106,13 +123,13 @@ export class MeshDrawer extends Component {
                     this.frameWireColor.a = 30;
                     this.technique = TechniqueNams.transparent;
 
-                    this.primitive(p, this.frameWireColor);
+                    this.primitive(linePri, this.frameWireColor);
 
                     this.depthFunc = depthFunc;
                     this.frameWireColor.a = alpha;
                     this.technique = technique;
                 }
-            }
+            };
         }
     }
 
@@ -144,6 +161,59 @@ export class MeshDrawer extends Component {
     torus = primitives.torus
     plane = primitives.plane
     quad = primitives.quad
+
+    _getContinuousPoints (points: Vec3[], start: number, end: number) {
+        let outPoints: Vec3[] = []
+        for (let i = start; i < end - 1; i++) {
+            outPoints.push(points[i], points[i + 1]);
+        }
+        return outPoints;
+    }
+
+    _line_box (options: __private.cocos_primitive_box_IBoxOptions) {
+        let w = (options.width || 1) / 2;
+        let h = (options.height || 1) / 2;
+        let l = (options.length || 1) / 2;
+
+        let points = [
+            _tempBoxVec3[0].set(-w, -h, l), _tempBoxVec3[1].set(w, -h, l), _tempBoxVec3[2].set(w, h, l), _tempBoxVec3[3].set(-w, h, l),
+            _tempBoxVec3[4].set(-w, -h, -l), _tempBoxVec3[5].set(w, -h, -l), _tempBoxVec3[6].set(w, h, -l), _tempBoxVec3[7].set(-w, h, -l)
+        ]
+        let sortedPoints: Vec3[][] = []
+        sortedPoints.push(points.slice(0, 4));
+        sortedPoints.push(points.slice(4, 8));
+
+        for (let i = 0; i < 4; i++) {
+            sortedPoints.push([points[i], points[i + 4]]);
+        }
+
+        return this._line(...sortedPoints)
+    }
+
+    _line (...args: Vec3[][]): primitives.IGeometry {
+        let positions: number[] = []
+        let indices: number[] = []
+
+        let pointIndex = 0;
+        args.forEach(points => {
+            let startIndex = pointIndex;
+            for (let i = 0; i < points.length; i++) {
+                positions.push(points[i].x, points[i].y, points[i].z);
+                if ((i + 1) < points.length) {
+                    indices.push(pointIndex, pointIndex + 1);
+                }
+                else {
+                    indices.push(pointIndex, startIndex);
+                }
+                pointIndex++;
+            }
+        })
+
+        return {
+            positions,
+            indices,
+        }
+    }
 
     primitive (primitive: primitives.IGeometry, color: Color) {
         let primitiveMode = primitive.primitiveMode!;
@@ -247,8 +317,11 @@ export class MeshDrawer extends Component {
                 ibuffer[ibOffset++] = vertexStart + indices[i];
                 ibuffer[ibOffset++] = vertexStart + indices[i + 1];
             }
-            ibuffer[ibOffset++] = vertexStart + indices[indices.length - 1];
-            ibuffer[ibOffset++] = vertexStart + indices[0];
+
+            if ((this.type & DrawType.FrameWire) || (this.type & DrawType.FrameWireDouble)) {
+                ibuffer[ibOffset++] = vertexStart + indices[indices.length - 1];
+                ibuffer[ibOffset++] = vertexStart + indices[0];
+            }
         }
     }
 
