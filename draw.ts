@@ -162,7 +162,7 @@ export class MeshDrawer extends Component {
     plane = primitives.plane
     quad = primitives.quad
 
-    _getContinuousPoints (points: Vec3[], start: number, end: number) {
+    private _getContinuousPoints (points: Vec3[], start: number, end: number) {
         let outPoints: Vec3[] = []
         for (let i = start; i < end - 1; i++) {
             outPoints.push(points[i], points[i + 1]);
@@ -170,7 +170,7 @@ export class MeshDrawer extends Component {
         return outPoints;
     }
 
-    _line_box (options: __private.cocos_primitive_box_IBoxOptions) {
+    private _line_box (options: __private.cocos_primitive_box_IBoxOptions) {
         let w = (options.width || 1) / 2;
         let h = (options.height || 1) / 2;
         let l = (options.length || 1) / 2;
@@ -190,7 +190,7 @@ export class MeshDrawer extends Component {
         return this._line(...sortedPoints)
     }
 
-    _line (...args: Vec3[][]): primitives.IGeometry {
+    private _line (...args: Vec3[][]): primitives.IGeometry {
         let positions: number[] = []
         let indices: number[] = []
 
@@ -213,6 +213,12 @@ export class MeshDrawer extends Component {
             positions,
             indices,
         }
+    }
+
+    line (...args: Vec3[][]) {
+        let p = this._line(...args);
+        p.primitiveMode = gfx.PrimitiveMode.LINE_LIST;
+        this.primitive(p, this.frameWireColor);
     }
 
     primitive (primitive: primitives.IGeometry, color: Color) {
