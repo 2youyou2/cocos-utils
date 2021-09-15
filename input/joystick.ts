@@ -137,7 +137,7 @@ export class JoyStick extends Component {
 
     _touchPosition = new Vec2;
     touchMove (event: EventTouch) {
-        if (!this.control) return;
+        if (!this.control || !this.control.activeInHierarchy) return;
 
         let touchPos = this._touchPosition;
 
@@ -177,7 +177,7 @@ export class JoyStick extends Component {
         TouchStart.invoke();
     }
     touchEnd (event: EventTouch) {
-        if (!this.control) return;
+        if (!this.control || !this.control.activeInHierarchy) return;
 
         let touchPos = this._touchPosition;
         event.getLocation(touchPos);
