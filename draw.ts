@@ -86,6 +86,8 @@ export class MeshDrawer extends Component {
         this._line = this._line.bind(this);
         this._line_box = this._line_box.bind(this);
 
+        let solidPriMap: Map<string, primitives.IGeometry> = new Map
+
         for (let name in primitives) {
             if (!(this as any)[name]) continue;
             (this as any)[name] = (...args: any[]) => {
@@ -96,8 +98,12 @@ export class MeshDrawer extends Component {
                     lineFunc = (this as any)['_line_' + name];
                 }
 
+                let solidPri: primitives.IGeometry = solidPriMap.get(name)!;
+                if (!solidPri) {
+                    solidPri = solidFunc(...args);
+                    solidPriMap.set(name, solidPri);
+                }
 
-                let solidPri: primitives.IGeometry = solidFunc(...args);
                 let linePri: primitives.IGeometry = solidPri;
                 if (lineFunc) {
                     linePri = lineFunc(...args);
@@ -162,18 +168,10 @@ export class MeshDrawer extends Component {
     plane = primitives.plane
     quad = primitives.quad
 
-    private _getContinuousPoints (points: Vec3[], start: number, end: number) {
-        let outPoints: Vec3[] = []
-        for (let i = start; i < end - 1; i++) {
-            outPoints.push(points[i], points[i + 1]);
-        }
-        return outPoints;
-    }
-
     private _line_box (options: __private.cocos_primitive_box_IBoxOptions) {
-        let w = (options.width || 1) / 2;
-        let h = (options.height || 1) / 2;
-        let l = (options.length || 1) / 2;
+        let w = ((options && options.width) || 1) / 2;
+        let h = ((options && options.height) || 1) / 2;
+        let l = ((options && options.length) || 1) / 2;
 
         let points = [
             _tempBoxVec3[0].set(-w, -h, l), _tempBoxVec3[1].set(w, -h, l), _tempBoxVec3[2].set(w, h, l), _tempBoxVec3[3].set(-w, h, l),
