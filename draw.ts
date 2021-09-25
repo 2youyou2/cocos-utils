@@ -1,5 +1,7 @@
 import { assetManager, CCObject, Color, Component, Director, director, EffectAsset, error, find, Game, game, geometry, gfx, Mat4, Material, Mesh, MeshRenderer, Node, primitives, PrimitiveType, Quat, utils, Vec3, _decorator, __private } from 'cc';
 import { createMesh } from '../spline-tool/editor/asset-operation';
+import { Font, FontType } from './svg/font';
+import { SVG } from './svg/svg';
 
 const { ccclass } = _decorator;
 
@@ -134,15 +136,6 @@ export class MeshDrawer extends Component {
         // })
     }
 
-    // box = primitives.box
-    // sphere = primitives.sphere
-    // cylinder = primitives.cylinder
-    // cone = primitives.cone
-    // capsule = primitives.capsule
-    // torus = primitives.torus
-    // plane = primitives.plane
-    // quad = primitives.quad
-
     _cachedMeshes: Map<string, Mesh> = new Map
     _cachedNodes: Map<Material, Map<Mesh, Node[]>> = new Map
     _cachedMaterialDatas: Map<string, CachedMaterialData> = new Map
@@ -215,6 +208,25 @@ export class MeshDrawer extends Component {
     }
     plane () {
         this.primitive('plane')
+    }
+
+    text (t: string, scale = 1) {
+        let cull = this.cull
+
+        this.cull = CullMode.None
+
+        for (let i = 0; i < t.length; i++) {
+            let data = Font.Lora.get(t[i], scale)
+            if (!data) {
+                continue
+            }
+
+            if (this.type & DrawType.Solid) {
+                this.draw(data.mesh, gfx.PrimitiveMode.TRIANGLE_LIST)
+            }
+        }
+
+        this.cull = cull
     }
 
     primitive (name: string) {
