@@ -8,7 +8,7 @@ const { ccclass } = _decorator;
 let _tempVec3 = new Vec3;
 let _tempBoxVec3 = new Array(8).fill(0).map(_ => new Vec3)
 
-const UseInstance = false;
+let UseInstance = true;
 
 let _tempPos = new Vec3
 let _tempRotation = new Quat
@@ -111,7 +111,7 @@ export class MeshDrawer extends Component {
         this.depthTest = undefined;
         this.depthWrite = undefined;
         this.depthFunc = undefined;
-        this.technique = TechniqueNams.opaque;
+        this.technique = TechniqueNams.transparent;
         this.matrix.identity();
     }
 
@@ -211,10 +211,14 @@ export class MeshDrawer extends Component {
     }
 
     text (t: string, scale = 1) {
+        // UseInstance = true;
+
         let cull = this.cull
 
         this.cull = CullMode.None
 
+        let space = 0;//0.1;
+        let offset = 0;
         for (let i = 0; i < t.length; i++) {
             let data = Font.Lora.get(t[i], scale)
             if (!data) {
@@ -222,11 +226,16 @@ export class MeshDrawer extends Component {
             }
 
             if (this.type & DrawType.Solid) {
+                let width = data.geo.maxPos!.x - data.geo.minPos!.x
+                this.matrix.m12 += offset + width / 2;
                 this.draw(data.mesh, gfx.PrimitiveMode.TRIANGLE_LIST)
+                offset = space + width / 2;
             }
         }
 
         this.cull = cull
+
+        // UseInstance = false;
     }
 
     primitive (name: string) {
@@ -283,7 +292,7 @@ export class MeshDrawer extends Component {
                 depthStencilState: depthStencilState
             },
             defines: {
-                USE_VERTEX_COLOR: true
+                USE_VERTEX_COLOR: !UseInstance
             }
         });
 
@@ -486,8 +495,15 @@ export class MeshDrawer extends Component {
         if (!UseInstance) {
             this._cachedMaterialDatas.forEach(md => {
                 md.meshes.forEach(md => {
-                    let mr = md.rootMR!;
-                    let mesh = mr.mesh!;
+                    let mr = md.rootMR;
+                    if (!mr) {
+                        return;
+                    }
+                    let mesh = mr.mesh;
+                    if (!mesh) {
+                        return;
+                    }
+
                     let subMesh = mesh.renderingSubMeshes[0];
 
                     let vb = subMesh.vertexBuffers[0];

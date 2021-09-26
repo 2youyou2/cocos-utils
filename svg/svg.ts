@@ -15,10 +15,11 @@
  *
  * */
 
-import { color, geometry, Graphics, Mesh, Node, primitives, utils, Vec2 } from "cc";
+import { color, geometry, Graphics, Mesh, Node, primitives, utils, Vec2, Vec3 } from "cc";
 import arcToBezier from "./arc2bezier";
 
-const Scale2Dto3D = 1 / 100
+const Scale2D = 1 / 10
+const Scale2Dto3D = 1 / 100 / Scale2D
 
 export class Command {
     cmd = '';
@@ -156,6 +157,10 @@ export class Path {
     }
 
     draw (ctx: Graphics, scale = 1) {
+        // ctx.lineCap = Graphics.LineCap.ROUND
+        // ctx.lineJoin = Graphics.LineJoin.ROUND
+        ctx.lineWidth = 1 * Scale2D
+
         let commands = this.commands
         for (let i = 0; i < commands.length; i++) {
             commands[i].draw(ctx, scale)
@@ -177,12 +182,13 @@ export class Path {
             let startVbOffset = renderData.vertexStart * AttrBytes;
             let startIbOffset = renderData.indicesStart;
 
-            this.draw(ctx, scale)
+            this.draw(ctx, scale * Scale2D)
 
             let positions: number[] = []
             let indices: number[] = []
 
-
+            let minx = Infinity, maxx = -Infinity;
+            let miny = Infinity, maxy = -Infinity;
             for (let i = startDataOffset; i <= ctx.impl!.dataOffset; i++) {
                 let renderData = ctx.impl!.getRenderDataList()[i]
 
@@ -193,16 +199,31 @@ export class Path {
                 let ibOffset = renderData.indicesStart;
 
                 for (let j = startVbOffset; j < vbOffset; j += AttrBytes) {
-                    positions.push(vb[j], this.svg.height - vb[j + 1], vb[j + 2])
+                    minx = Math.min(minx, vb[j])
+                    maxx = Math.max(maxx, vb[j])
+                }
+
+                let cx = (maxx - minx) / 2 + minx
+                minx -= cx
+                maxx -= cx
+
+                for (let j = startVbOffset; j < vbOffset; j += AttrBytes) {
+                    let y = this.svg.height - vb[j + 1]
+                    miny = Math.min(miny, y)
+                    maxy = Math.max(maxy, y)
+
+                    positions.push(vb[j] - cx, y, vb[j + 2])
                 }
                 for (let j = startIbOffset; j < ibOffset; j++) {
                     indices.push(ib[j])
                 }
             }
 
-            let info = {
+            let info: primitives.IGeometry = {
                 positions,
-                indices
+                indices,
+                minPos: new Vec3(minx, miny, 0),
+                maxPos: new Vec3(maxx, maxy, 0)
             }
 
             g = new PathData(info, utils.createMesh(info))
@@ -257,7 +278,9 @@ export class Path {
 
             let info = {
                 positions,
-                indices
+                indices,
+                minPos: new Vec3(g2d.geo.minPos!.x * Scale2Dto3D, g2d.geo.minPos!.y * Scale2Dto3D, -0.01),
+                maxPos: new Vec3(g2d.geo.maxPos!.x * Scale2Dto3D, g2d.geo.maxPos!.y * Scale2Dto3D, 0.01)
             }
             g = new PathData(info, utils.createMesh(info))
 
@@ -274,15 +297,16 @@ export class SVG {
     height = 0
 
     constructor (str: string) {
+
         let svgEle = str.match(/<svg.*>/g)
         if (svgEle) {
             let res = /width="(.*?)"/.exec(svgEle[0])
             if (res && res[1]) {
-                this.width = parseFloat(res[1])
+                this.width = parseFloat(res[1]) * Scale2D
             }
             res = /height="(.*?)"/.exec(svgEle[0])
             if (res && res[1]) {
-                this.height = parseFloat(res[1])
+                this.height = parseFloat(res[1]) * Scale2D
             }
         }
 

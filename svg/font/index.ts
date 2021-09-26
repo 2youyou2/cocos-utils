@@ -18,10 +18,6 @@ class FontData {
         let node = new Node
         this.ctx = node.addComponent(Graphics)
 
-        this.ctx.lineCap = Graphics.LineCap.ROUND
-        this.ctx.lineJoin = Graphics.LineJoin.ROUND
-        this.ctx.lineWidth = 1
-
         this.svg = new SVG(str);
     }
 
