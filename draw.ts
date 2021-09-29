@@ -1,4 +1,5 @@
 import { assetManager, CCObject, Color, Component, Director, director, EffectAsset, error, find, Game, game, geometry, gfx, Mat4, Material, Mesh, MeshRenderer, Node, primitives, PrimitiveType, Quat, utils, Vec3, _decorator, __private } from 'cc';
+import Event from '../cocos-sync/utils/event';
 import { createMesh } from '../spline-tool/editor/asset-operation';
 import { Font, FontType } from './svg/font';
 import { SVG } from './svg/svg';
@@ -8,11 +9,12 @@ const { ccclass } = _decorator;
 let _tempVec3 = new Vec3;
 let _tempBoxVec3 = new Array(8).fill(0).map(_ => new Vec3)
 
-let UseInstance = true;
+let UseInstance = false;
 
 let _tempPos = new Vec3
 let _tempRotation = new Quat
 let _tempScale = new Vec3
+
 
 let DrawTypeIndex = 0;
 export enum DrawType {
@@ -94,6 +96,26 @@ export class MeshDrawer extends Component {
 
     matrix = new Mat4;
 
+    private _Ready = new Event
+    get Ready () {
+        if (!this._effect) {
+            loadBuiltinEffect((err: any, effect: EffectAsset) => {
+                this._effect = effect;
+
+                setTimeout(() => {
+                    this._Ready.invoke()
+                }, 10)
+            })
+        }
+        else {
+            setTimeout(() => {
+                this._Ready.invoke()
+            }, 10)
+        }
+
+        return this._Ready
+    }
+
     depth (depthTest?: boolean, depthWrite?: boolean, depthFunc?: gfx.ComparisonFunc) {
         this.depthTest = depthTest;
         this.depthWrite = depthWrite;
@@ -145,6 +167,9 @@ export class MeshDrawer extends Component {
     _primitiveMode = gfx.PrimitiveMode.TRIANGLE_LIST
 
     _effect: EffectAsset | undefined
+    get effect () {
+        return this._effect
+    }
 
     _lineMesh: Mesh | undefined
     getLineMesh () {
@@ -211,7 +236,7 @@ export class MeshDrawer extends Component {
     }
 
     text (t: string, scale = 1) {
-        // UseInstance = true;
+        UseInstance = true;
 
         let cull = this.cull
 
@@ -235,7 +260,7 @@ export class MeshDrawer extends Component {
 
         this.cull = cull
 
-        // UseInstance = false;
+        UseInstance = false;
     }
 
     primitive (name: string) {
@@ -412,7 +437,7 @@ export class MeshDrawer extends Component {
             let renderer = meshData.renderers[meshData.rendererIndex]
             if (!renderer) {
                 let node = new Node
-                node._objFlags |= CCObject.Flags.DontSave;
+                node._objFlags |= CCObject.Flags.DontSave | CCObject.Flags.HideInHierarchy;
                 node.parent = meshData.root;
 
                 let mr = node.addComponent(MeshRenderer)
@@ -555,14 +580,14 @@ class Debug {
         if (!director.getScene()) {
             return;
         }
-        let drawer = this.drawer;
-        drawer.clear();
+        // let drawer = this.drawer;
+        // drawer.clear();
 
-        // drawer.color.set(Color.WHITE);
-        // drawer.box({})
+        // // drawer.color.set(Color.WHITE);
+        // // drawer.box({})
 
-        drawer.technique = TechniqueNams.transparent;
-        drawer.type = DrawType.Solid | DrawType.FrameWireDouble;
+        // drawer.technique = TechniqueNams.transparent;
+        // drawer.type = DrawType.Solid | DrawType.FrameWireDouble;
 
         // drawer.color.set(Color.WHITE);
         // drawer.box({
@@ -591,7 +616,7 @@ class Debug {
         if (!director.getScene()) {
             return;
         }
-        this.drawer.finish();
+        // this.drawer.finish();
     }
 }
 
@@ -612,9 +637,17 @@ export let debug = globalAny.debug = new Debug;
 director.on(Director.EVENT_BEFORE_DRAW, globalAny.debug._beforeDraw, globalAny.debug);
 director.on(Director.EVENT_BEFORE_UPDATE, globalAny.debug._beforeUpdate, globalAny.debug);
 
+let _unlitEffect: EffectAsset | undefined
 function loadBuiltinEffect (cb: Function) {
-    // let effect = EffectAsset.get('builtin-unlit') || EffectAsset.get('unlit')
-    assetManager.loadAny('a3cd009f-0ab0-420d-9278-b9fdab939bbc', cb)
+    if (_unlitEffect) {
+        cb(null, _unlitEffect)
+        return
+    }
+
+    assetManager.loadAny('a3cd009f-0ab0-420d-9278-b9fdab939bbc', (err, effect: EffectAsset) => {
+        _unlitEffect = effect
+        cb(err, _unlitEffect)
+    })
 }
 
 game.on(Game.EVENT_GAME_INITED, () => {
