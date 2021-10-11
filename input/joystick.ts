@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, Vec3, Vec2, EventTouch, UITransform, view, Widget, math } from 'cc';
+import { _decorator, Component, Node, Vec3, Vec2, EventTouch, UITransform, view, Widget, math, Canvas, find, director } from 'cc';
 const { ccclass, property } = _decorator;
 import Event from '../event';
 import { Jump, Shoot, TouchEnd, TouchMove, TouchPanelEnd, TouchPanelMove, TouchPanelStart, TouchStart } from './input-event';
@@ -54,11 +54,16 @@ export class JoyStick extends Component {
         this.node.on(Node.EventType.TOUCH_END, this.touchEnd, this);
         this.node.on(Node.EventType.TOUCH_CANCEL, this.touchEnd, this);
 
-        if (this.touchPanel) {
-            this.touchPanel.on(Node.EventType.TOUCH_MOVE, this.touchPanelMove, this);
-            this.touchPanel.on(Node.EventType.TOUCH_START, this.touchPanelStart, this);
-            this.touchPanel.on(Node.EventType.TOUCH_END, this.touchPanelEnd, this);
-            this.touchPanel.on(Node.EventType.TOUCH_CANCEL, this.touchPanelEnd, this);
+        let touchPanel = this.touchPanel;
+        if (!touchPanel) {
+            let canvas = director.getScene()?.getComponentInChildren(Canvas);
+            touchPanel = canvas?.node!;
+        }
+        if (touchPanel) {
+            touchPanel.on(Node.EventType.TOUCH_MOVE, this.touchPanelMove, this);
+            touchPanel.on(Node.EventType.TOUCH_START, this.touchPanelStart, this);
+            touchPanel.on(Node.EventType.TOUCH_END, this.touchPanelEnd, this);
+            touchPanel.on(Node.EventType.TOUCH_CANCEL, this.touchPanelEnd, this);
         }
 
         if (this.jumpBtn) {
