@@ -1,8 +1,6 @@
 import { assetManager, CCObject, Color, Component, Director, director, EffectAsset, error, find, Game, game, geometry, gfx, Mat4, Material, Mesh, MeshRenderer, Node, primitives, PrimitiveType, Quat, utils, Vec3, _decorator, __private } from 'cc';
-import Event from '../cocos-sync/utils/event';
-import { createMesh } from '../spline-tool/editor/asset-operation';
+import Event from './event';
 import { Font, FontType } from './svg/font';
-import { SVG } from './svg/svg';
 
 const { ccclass } = _decorator;
 
