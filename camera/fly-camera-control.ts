@@ -94,7 +94,7 @@ export class FlyCameraControl extends Component {
                     .to(0.5, { worldRotation: this._storedRotation, position: this._storedPosition })
                     .call(() => {
                         let animation = this.getComponent(Animation);
-                        if (animation) {
+                        if (animation && animation.enabled) {
                             animation.resume();
                         }
                         this._tween = null;
@@ -103,7 +103,7 @@ export class FlyCameraControl extends Component {
             }
             else {
                 let animation = this.getComponent(Animation);
-                if (animation) {
+                if (animation && animation.enabled) {
                     animation.resume();
                 }
             }
